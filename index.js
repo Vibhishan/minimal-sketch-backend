@@ -1,9 +1,12 @@
+import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { instrument } from "@socket.io/admin-ui";
 
 const PORT = 4000;
-const httpServer = createServer();
+
+const app = express();
+const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: "http://localhost:5173",
