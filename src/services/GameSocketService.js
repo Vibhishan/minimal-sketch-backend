@@ -48,3 +48,10 @@ export function initializeSocketService(httpServer, corsOptions) {
   }
   return instance;
 }
+
+export function getSocketServiceInstance() {
+  if (!instance) {
+    throw new Error("Socket service not initialized");
+  }
+  return instance;
+}
