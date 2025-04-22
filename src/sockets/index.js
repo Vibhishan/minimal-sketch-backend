@@ -1,33 +1,36 @@
-import { JOIN_EVENT, SEND_EVENT, DRAW_EVENT } from "./events.js";
-import { handleChatMessage } from "./handlers/chatHandler.js";
-import { handleDrawEvent } from "./handlers/drawHandler.js";
+import { Server } from "socket.io";
+import { setupRoomHandlers } from "./handlers/roomHandler.js";
+import { setupGameHandlers } from "./handlers/gameHandler.js";
+import { setupDrawHandlers } from "./handlers/drawHandler.js";
+import { setupWordHandlers } from "./handlers/wordHandler.js";
+import { setupChatHandlers } from "./handlers/chatHandler.js";
+import { setupSocketHandlers } from "../socketHandlers.js";
 
-export function initializeSockets(io) {
-  io.on("connection", (socket) => {
-    console.log(`Socket connected: ${socket.id}`);
-
-    // Room Events
-    socket.on(JOIN_EVENT, (roomId) => {
-      socket.join(roomId);
-      console.log(`User with ID: ${socket.id} joined room: ${roomId}`);
-    });
-
-    // Chat Events
-    socket.on(SEND_EVENT, (data) => {
-      handleChatMessage(io, socket, data);
-    });
-
-    socket.on(DRAW_EVENT, (data) => {
-      console.log(`Message sent: ${data.senderId} to room: ${data.strokes}`);
-
-      handleDrawEvent(io, socket, data);
-    });
-
-    // Game Events (to be implemented)
-    // socket.on(START_GAME, (data) => handleStartGame(io, socket, data));
-    // socket.on(END_GAME, (data) => handleEndGame(io, socket, data));
-    // socket.on(ROUND_START, (data) => handleRoundStart(io, socket, data));
-    // socket.on(ROUND_END, (data) => handleRoundEnd(io, socket, data));
-    // socket.on(GUESS_WORD, (data) => handleGuessWord(io, socket, data));
+export const initializeSockets = (server) => {
+  const io = new Server(server, {
+    cors: {
+      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      methods: ["GET", "POST"],
+    },
   });
-}
+
+  io.on("connection", (socket) => {
+    console.log("New client connected:", socket.id);
+
+    // Setup all handlers
+    setupRoomHandlers(io, socket);
+    setupGameHandlers(io, socket);
+    setupDrawHandlers(io, socket);
+    setupWordHandlers(io, socket);
+    setupChatHandlers(io, socket);
+
+    // Handle disconnection
+    socket.on("disconnect", () => {
+      console.log("Client disconnected:", socket.id);
+    });
+  });
+
+  setupSocketHandlers(io);
+
+  return io;
+};

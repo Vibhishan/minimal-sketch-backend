@@ -16,7 +16,23 @@ class GameSocketService {
       cors: {
         origin: corsOptions.origin,
         methods: corsOptions.methods,
+        credentials: corsOptions.credentials,
       },
+      transports: ["websocket", "polling"],
+      allowEIO3: true,
+    });
+
+    // Add connection logging
+    this.io.on("connection", (socket) => {
+      console.log("Client connected:", socket.id);
+
+      socket.on("disconnect", () => {
+        console.log("Client disconnected:", socket.id);
+      });
+
+      socket.on("error", (error) => {
+        console.error("Socket error:", error);
+      });
     });
 
     console.log("Socket server created");
