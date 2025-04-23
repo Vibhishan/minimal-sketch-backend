@@ -9,8 +9,24 @@ export const setupWordHandlers = (io, socket) => {
       // Store the selected word in the room
       await WordService.addWord(word);
 
-      // Notify all players that a word has been selected
-      io.to(roomId).emit(WORD_SELECTED, { word });
+      // Only send the word to the current drawer
+      io.to(socket.id).emit(WORD_SELECTED, {
+        word,
+        isDrawer: true,
+      });
+
+      // Send null word to all other players
+      const room = io.sockets.adapter.rooms.get(roomId);
+      if (room) {
+        room.forEach((playerId) => {
+          if (playerId !== socket.id) {
+            io.to(playerId).emit(WORD_SELECTED, {
+              word: null,
+              isDrawer: false,
+            });
+          }
+        });
+      }
     } catch (error) {
       socket.emit(ERROR, { message: error.message });
     }
